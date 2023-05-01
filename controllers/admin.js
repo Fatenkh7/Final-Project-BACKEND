@@ -1,160 +1,102 @@
 import adminModel from "../models/Admin.js";
 import bcrypt from "bcryptjs";
-import dotenv from "dotenv";
-dotenv.config();
+import salt from "salt";
 /**
- * @description admin sign up
- * @param {Object} req.body
+ * @description get all admins
+ * @param {object} req
  */
-const createAdmin = async (req, res) => {
+export async function getAll(req, res, next) {
   try {
-    const { firstName, lastName, email, password } = req.body;
-    let newAdmin;
-    if (req.body.password) {
-      let hashed = await bcrypt.hashSync(req.body.password, 10);
-      newAdmin = new adminModel({
-        firstName,
-        lastName,
-        email,
-        password:hashedPassword,
-      });
-    } else {
-      newAdmin = new adminModel({
-        firstName,
-        lastName,
-        email,
-        password:hashedPassword,
-      });
+    const response = await adminModel.find({});
+    return res.status(200).send({ success: true, response });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/**
+ * @description get admin by id
+ * @param {object} req
+ */
+export async function getById(req, res, next) {
+  try {
+    const { id } = req.params;
+    const admin = await adminModel.findById(id);
+    if (!admin) {
+      return res
+        .status(404)
+        .send({ success: false, message: "Admin not found" });
     }
-    await newAdmin.save();
-    res
-      .status(201)
-      .send({ success: true, message: "Admin added successfully" });
+    res.status(200).send({ success: true, admin });
   } catch (error) {
-    console.log(error);
-    res.status(410).send({
-      error: true,
-      message: "There is a problem with Saving the data",
-      data: error,
-    });
+    next(error);
   }
-};
+}
+/**
+ * @description add a new admin
+ * @param {object} req
+ */
+const saltRounds = 10; 
+export async function addAdmin(req, res, next) {
+  try {
+    const { firstName, lastName, email, password, phone } =
+      req.body;
+
+    const salt = await bcrypt.genSalt(saltRounds); // Generate the salt value
+    const hashedPassword = await bcrypt.hash(password, salt); // Hash the password with the salt
+
+    const admin = new adminModel({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+    });
+
+    await admin.save();
+
+    res.status(201).json({ message: "Admin created successfully", admin });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
 
 /**
- * @description update admin information by id
- * @param {String} req.params.id
- * @param {Object} req.body
+ * @description update admin by id
+ * @param {object} req
  */
-const updateAdminMById = async (req, res) => {
+export async function editAdminById(req, res) {
   try {
-    let updatedAdmin = await adminModel.updateOne(
-      { _id: req.params.id },
-      { $set: req.body },
-      {
-        runValidators: true,
-      }
-    );
-    res.status(200).send({ success: true, message: "Admin data updated" });
-  } catch (error) {
-    res.status(412).send({
-      error: true,
-      message: "There was a problem updating the data",
-      data: error,
-    });
-  }
-};
+    let filter = { _id: req.params.id };
+    let update = req.body;
 
+    const salt = await bcrypt.genSaltSync(10);
+    const hash = await bcrypt.hashSync(req.body.password, salt);
+    update.password = hash;
+    const updateAdmin = await adminModel.findOneAndUpdate(filter, update, {
+      //for save it in the database
+      new: true,
+    });
+    res.status(200).json({ message: "Update successfully", data: updateAdmin });
+  } catch (err) {
+    res.status(404).json({ message: err });
+  }
+}
 /**
  * @description delete admin by id
- * @param {String} req.params.id
+ * @param {object} req
  */
-const deleteAdminById = async (req, res) => {
+export async function deleteaAminById(req, res, next) {
   try {
-    await adminModel.findByIdAndDelete({ _id: req.params.id }).then(
-      function (response) {
-        res
-          .status(200)
-          .send({ success: true, message: "Admin deleted successfully" });
-      },
-      function (reject) {
-        res.status(412).send({
-          error: true,
-          message: "There was a problem deleting this admin",
-          data: reject,
-        });
-      }
-    );
-  } catch (error) {
-    res.status(412).send({
-      error: true,
-      message: "There was a problem delete the admin",
-      data: error,
+    const removeAdmin = await adminModel.findOneAndDelete({
+      _id: req.params.id,
     });
+    res
+      .status(200)
+      .json({ data: removeAdmin, message: "This admin has been deleted" });
+  } catch (err) {
+    res.status(404).json({ message: err });
   }
-};
+}
 
-/**
- * @description get all adminModels
- */
-const getAllAdmin = async (req, res) => {
-  try {
-    await adminModel.find({}).then(
-      function (response) {
-        res.status(200).send({
-          success: true,
-          message: "Admin data retrieved Successfully",
-          data: response,
-        });
-      },
-      function (reject) {
-        res.status(412).send({
-          error: true,
-          message: "There was a problem getting the adminModels data",
-          data: reject,
-        });
-      }
-    );
-  } catch (error) {
-    res.status(412).send({
-      error: true,
-      message: "There was a problem getting the adminModels data",
-      data: error,
-    });
-  }
-};
-/**
- * @description get one adminModel by id
- * @param {string} req.params.id
- */
-const getAdminByParam = async (req, res) => {
-  try {
-    adminModel.find({ _id: req.params.id }).then(
-      function (response) {
-        res.status(200).send({
-          success: true,
-          message: "Admin data retrieved Successfully",
-          data: response,
-        });
-      },
-      function (reject) {
-        res.status(412).send({
-          error: true,
-          message: "There was a problem getting the adminModel data",
-          data: reject,
-        });
-      }
-    );
-  } catch (error) {
-    res.status(412).send({
-      error: true,
-      message: "There was a problem getting the adminModels data",
-    });
-  }
-};
-export default {
-    createAdmin,
-    updateAdminMById,
-    deleteAdminById,
-    getAllAdmin,
-    getAdminByParam,
-};
+const controller = { addAdmin, getAll, deleteaAminById, getById, editAdminById };
+export default controller;
