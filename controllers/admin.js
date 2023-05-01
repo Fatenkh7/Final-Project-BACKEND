@@ -1,12 +1,13 @@
-import userModel from "../models/User.js";
+import adminModel from "../models/Admin.js";
 import bcrypt from "bcryptjs";
+import salt from "salt";
 /**
- * @description get all users
+ * @description get all admins
  * @param {object} req
  */
 export async function getAll(req, res, next) {
   try {
-    const response = await userModel.find({});
+    const response = await adminModel.find({});
     return res.status(200).send({ success: true, response });
   } catch (err) {
     return next(err);
@@ -14,17 +15,17 @@ export async function getAll(req, res, next) {
 }
 
 /**
- * @description get user by id
+ * @description get admin by id
  * @param {object} req
  */
 export async function getById(req, res, next) {
   try {
     const { id } = req.params;
-    const user = await userModel.findById(id);
-    if (!user) {
+    const admin = await adminModel.findById(id);
+    if (!admin) {
       return res
         .status(404)
-        .send({ success: false, message: "User not found" });
+        .send({ success: false, message: "Admin not found" });
     }
     res.status(200).send({ success: true, admin });
   } catch (error) {
@@ -32,34 +33,38 @@ export async function getById(req, res, next) {
   }
 }
 /**
- * @description add a new user
+ * @description add a new admin
  * @param {object} req
  */
-export async function addUser(req, res, next) {
+const saltRounds = 10; 
+export async function addAdmin(req, res, next) {
   try {
     const { firstName, lastName, email, password, phone } =
       req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new userModel({
+
+    const salt = await bcrypt.genSalt(saltRounds); // Generate the salt value
+    const hashedPassword = await bcrypt.hash(password, salt); // Hash the password with the salt
+
+    const admin = new adminModel({
       firstName,
       lastName,
       email,
       password: hashedPassword,
-      phone,
     });
 
-    await user.save();
+    await admin.save();
 
-    res.status(201).json({ message: "User created successfully", user });
+    res.status(201).json({ message: "Admin created successfully", admin });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 }
+
 /**
- * @description update user by id
+ * @description update admin by id
  * @param {object} req
  */
-export async function editUserById(req, res) {
+export async function editAdminById(req, res) {
   try {
     let filter = { _id: req.params.id };
     let update = req.body;
@@ -67,31 +72,31 @@ export async function editUserById(req, res) {
     const salt = await bcrypt.genSaltSync(10);
     const hash = await bcrypt.hashSync(req.body.password, salt);
     update.password = hash;
-    const updateUser = await userModel.findOneAndUpdate(filter, update, {
+    const updateAdmin = await adminModel.findOneAndUpdate(filter, update, {
       //for save it in the database
       new: true,
     });
-    res.status(200).json({ message: "Update successfully", data: updateUser });
+    res.status(200).json({ message: "Update successfully", data: updateAdmin });
   } catch (err) {
     res.status(404).json({ message: err });
   }
 }
 /**
- * @description delete user by id
+ * @description delete admin by id
  * @param {object} req
  */
-export async function deleteUserById(req, res, next) {
+export async function deleteaAminById(req, res, next) {
   try {
-    const removeUser = await userModel.findOneAndDelete({
+    const removeAdmin = await adminModel.findOneAndDelete({
       _id: req.params.id,
     });
     res
       .status(200)
-      .json({ data: removeUser, message: "This user has been deleted" });
+      .json({ data: removeAdmin, message: "This admin has been deleted" });
   } catch (err) {
     res.status(404).json({ message: err });
   }
 }
 
-const controller = { addUser, getAll, deleteUserById, getById, editUserById };
+const controller = { addAdmin, getAll, deleteaAminById, getById, editAdminById };
 export default controller;

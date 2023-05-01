@@ -2,17 +2,21 @@ import express from "express";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import connectDB from "./config/db.js";
-import cors from "cors"
+import cors from "cors";
 import createError from "http-errors";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
+import userRoutes from "./routes/user.js";
+import adminRoutes from "./routes/admin.js";
+import QARoutes from "./routes/questionsAnswers.js";
+import preRoutes from "./routes/predefinedQA.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
 const app = express();
 app.use(express.json());
-app.use(cors())
+app.use(cors());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,6 +31,10 @@ app.get("/", (req, res) => {
 });
 
 app.use("/uploads", express.static("./uploads"));
+app.use("/admin", adminRoutes);
+app.use("/user", userRoutes);
+app.use("/pre", preRoutes);
+app.use("/qa", QARoutes);
 
 // create and error object,catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -35,7 +43,7 @@ app.use(function (req, res, next) {
 
 // error handler
 app.use(function (err, req, res, next) {
-  console.log(err)
+  console.log(err);
   res.status(err.status || 500).send({
     success: false,
     message: err.message,

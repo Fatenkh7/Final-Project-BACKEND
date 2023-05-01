@@ -3,11 +3,6 @@ const { Schema, model } = mongoose;
 
 const preQA = new Schema(
   {
-    type: {
-      type: String,
-      required: [true, "The type cann't be empty"],
-      trim: true,
-    },
     question: {
       type: String,
       required: [true, "The question cann't be empty"],
@@ -18,10 +13,10 @@ const preQA = new Schema(
       trim: true,
       required: [true, "The answer cann't be empty"],
     },
-    idUser: {
+    idAdmin: {
         type: Schema.Types.ObjectId,
-        ref: "User",
-        required: [true, "Please enter the user"],
+        ref: "Admin",
+        required: [true, "Please enter the admin"],
       },
   },
   {
