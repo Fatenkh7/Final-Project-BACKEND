@@ -1,4 +1,4 @@
-import userModel from "../models/Uset.js";
+import userModel from "../models/User.js";
 import bcrypt from "bcryptjs";
 /**
  * @description get all users
@@ -93,33 +93,5 @@ export async function deleteUserById(req, res, next) {
   }
 }
 
-// export const login = async (req, res) => {
-//   const email = req.body.email;
-//   const password = req.body.password;
-//   try {
-//     const loggingUser = await userModel.findOne({ email: email });
-//     if (!loggingUser) {
-//       return res.status(400).send("Invalid email");
-//     }
-//     const exist = await bcrypt.compare(password, loggingUser.password);
-//     if (!exist) {
-//       return res.status(400).send("Invalid password");
-//     }
-//     const token = jwt.sign(
-//       { user_id: loggingUser.id, email },
-//       process.env.JWT_SECRET,
-//       { expiresIn: '4h'}
-//     );
-//     let role;
-//     if(loggingUser.isSuper){role="superAdmin"}else{role="admin"}
-//     res.status(200).send({success:true, data:token, id:loggingUser._id, role:role});
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).send("Internal server error");
-//   }
-// };
-// export const test=(req, res)=>{
-//   res.send({success:true, message:"passed!"})
-// }
-const controller = { addUser, getAll, deleteUserById, getById, editUserById, login, test };
+const controller = { addUser, getAll, deleteUserById, getById, editUserById };
 export default controller;
